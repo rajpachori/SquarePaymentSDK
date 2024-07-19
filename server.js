@@ -17,9 +17,21 @@ const {
 // square provides the API client and error types
 const { ApiError, client: square } = require('./server/square');
 
+// Load environment variables from .env file
+require('dotenv').config();
+
+const { Client, Environment } = require('square');
+
+// Initialize the Square client with the environment variables
+const client = new Client({
+  accessToken: process.env.SQUARE_ACCESS_TOKEN,
+  environment: Environment.Sandbox, // Change to Environment.Production if you are using the production environment
+});
+
 async function createPayment(req, res) {
   const payload = await json(req);
   logger.debug(JSON.stringify(payload));
+
   // We validate the payload for specific fields. You may disable this feature
   // if you would prefer to handle payload validation on your own.
   if (!validatePaymentPayload(payload)) {
@@ -59,8 +71,7 @@ async function createPayment(req, res) {
         payment.verificationToken = payload.verificationToken;
       }
 
-      const { result, statusCode } =
-        await square.paymentsApi.createPayment(payment);
+      const { result, statusCode } = await client.paymentsApi.createPayment(payment);
 
       logger.info('Payment succeeded!', { result, statusCode });
 
@@ -110,7 +121,7 @@ async function storeCard(req, res) {
         cardReq.verificationToken = payload.verificationToken;
       }
 
-      const { result, statusCode } = await square.cardsApi.createCard(cardReq);
+      const { result, statusCode } = await client.cardsApi.createCard(cardReq);
 
       logger.info('Store Card succeeded!', { result, statusCode });
 
